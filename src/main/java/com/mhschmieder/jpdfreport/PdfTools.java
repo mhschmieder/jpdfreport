@@ -300,14 +300,15 @@ public final class PdfTools {
     }
 
     // Generic method to create PDF-ready Information Table Data.
-    public static List< List< Cell > > createInformationTableData( final PdfFonts borderlessTableFonts,
-                                                                   final int align,
-                                                                   final String[] information )
+    public static List< List< Cell > > createInformationTableData(
+            final PdfFonts borderlessTableFonts,
+            final int align,
+            final String[] information )
             throws Exception {
         // Information tables only have one column, with multiple rows.
         final List< List< Cell > > informationTableData = new ArrayList<>();
 
-        // Push all of the Information fields to unique rows (borderless).
+        // Push all the Information fields to unique rows (borderless).
         for ( final String element : information ) {
             final List< Cell > informationRowData = new ArrayList<>();
             PdfTools.addTableCell( informationRowData,
@@ -881,10 +882,11 @@ public final class PdfTools {
                                                final String[] information )
             throws Exception {
         // Information tables only have one column, with multiple rows.
-        final List< List< Cell > > informationTableData =
-                                                        createInformationTableData( borderlessTableFonts,
-                                                                                    align,
-                                                                                    information );
+        final List< List< Cell > > informationTableData
+                = createInformationTableData(
+                        borderlessTableFonts,
+                align,
+                information );
 
         // Write the table to as many pages as are required to fit.
         return writeInformationTable(
