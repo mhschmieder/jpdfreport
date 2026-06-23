@@ -36,8 +36,8 @@ import com.pdfjet.Color;
  * Wrapper class for PDF compatible hex-based colors.
  *
  * TODO: Mimic the PDFjet converter methods in their Color class to invert
- * that shifting algorithm, and apply that to our RGB colors in CSS stylesheets
- * instead, so there is no risk of diverging due to cut/paste and hex vs. RGB.
+ *  that shifting algorithm, and apply that to our RGB colors in CSS stylesheets
+ *  instead, so there is no risk of diverging due to cut/paste and hex vs. RGB.
  */
 public final class PdfColors {
 

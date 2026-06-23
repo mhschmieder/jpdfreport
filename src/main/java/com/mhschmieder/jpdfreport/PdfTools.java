@@ -202,7 +202,8 @@ public final class PdfTools {
         tableCell.setPadding( 4f );
 
         if ( !paintBorders ) {
-            tableCell.setNoBorders();
+            //tableCell.setNoBorders(); // NOTE: Replaced in API by method below
+            tableCell.setBorders( false );
             tableCell.setBottomPadding( 0f );
         }
 
@@ -826,7 +827,8 @@ public final class PdfTools {
         final List< Paragraph > paragraphs = new ArrayList<>();
 
         // Generate the report file title for use within the PDF report.
-        final String reportTitle = getReportTitle( productBranding, reportSubtitle );
+        final String reportTitle = getReportTitle(
+                productBranding, reportSubtitle );
 
         // Write the header.
         writeHeader( paragraphs, fonts, reportTitle );
@@ -846,7 +848,13 @@ public final class PdfTools {
         // Write the footer.
         writeFooter( paragraphs, fonts, productBranding, locale );
 
-        final TextFrame textFrame = new TextFrame( paragraphs );
+        // NOTE: The new API doesn't support this constructor. Need substitute.
+        //final TextFrame textFrame = new TextFrame( paragraphs );
+        final List< TextLine > textLines = new ArrayList<>();
+        for ( final Paragraph paragraph : paragraphs ) {
+            textLines.addAll( paragraph.getTextLines() );
+        }
+        final TextFrame textFrame = new TextFrame( textLines );
 
         // We seem to have to manually set our positioning on the page.
         textFrame.setLocation( PORTRAIT_LEFT_MARGIN, PORTRAIT_TOP_MARGIN );
@@ -874,13 +882,14 @@ public final class PdfTools {
     }
 
     // Generic method to write a borderless single-column Information Table.
-    public static Point writeInformationTable( final PDF document,
-                                               final Page page,
-                                               final Point initialPoint,
-                                               final PdfFonts borderlessTableFonts,
-                                               final int align,
-                                               final String[] information )
-            throws Exception {
+    // NOTE: The return type changed in the new API; it used to be Point.
+    public static float[] writeInformationTable(
+            final PDF document,
+            final Page page,
+            final Point initialPoint,
+            final PdfFonts borderlessTableFonts,
+            final int align,
+            final String[] information ) throws Exception {
         // Information tables only have one column, with multiple rows.
         final List< List< Cell > > informationTableData
                 = createInformationTableData(
@@ -898,31 +907,34 @@ public final class PdfTools {
     }
 
     // Generic method to write a borderless single-column Information Table.
-    public static Point writeInformationTable( final PDF document,
-                                               final Page page,
-                                               final Point initialPoint,
-                                               final PdfFonts borderlessTableFonts,
-                                               final List< List< Cell > > informationTableData )
-            throws Exception {
+    // NOTE: The return type changed in the new API; it used to be Point.
+    public static float[] writeInformationTable(
+            final PDF document,
+            final Page page,
+            final Point initialPoint,
+            final PdfFonts borderlessTableFonts,
+            final List< List< Cell > > informationTableData ) {
         // Get a table to use for the Information fields, sans headers.
         final Table informationTable = new Table();
 
         // Set the table to borderless, to match our on-screen look and feel.
-        informationTable.setNoCellBorders();
+        //informationTable.setNoCellBorders(); // NOTE: Replaced in API?
+        informationTable.setCellBorders( false );
 
         // Write the table to as many pages as are required to fit.
+        // NOTE: The return type changed in the new API; it used to be Point.
         Point point = new Point( initialPoint.getX(), initialPoint.getY() );
-        point = writeTable( document,
-                            page,
-                            point,
-                            borderlessTableFonts,
-                            informationTableData,
-                            informationTable,
-                            Table.DATA_HAS_0_HEADER_ROWS,
-                            true,
-                            false );
-
-        return point;
+        return writeTable(
+                document,
+                page,
+                point,
+                borderlessTableFonts,
+                informationTableData,
+                informationTable,
+                //Table.DATA_HAS_0_HEADER_ROWS, // NOTE: Obsolete API version
+                Table.WITH_0_HEADER_ROWS,
+                true,
+                false );
     }
 
     /*
@@ -1052,35 +1064,46 @@ public final class PdfTools {
     }
 
     // Implementation method to write a multi-page table to a PDF Report.
-    public static Point writeTable( final PDF document,
-                                    final Page firstPage,
-                                    final PdfFonts fonts,
-                                    final Table table,
-                                    final boolean landscapeMode ) {
+    // NOTE: Return type changed in new API; it used to be Point
+    public static float[] writeTable( final PDF document,
+                                      final Page firstPage,
+                                      final PdfFonts fonts,
+                                      final Table table,
+                                      final boolean landscapeMode ) {
         try {
             Page page = firstPage;
 
-            final int numberOfPages = table.getNumberOfPages( page );
+            // NOTE: New API doesn't have this method, so limit to one page?
+            //final int numberOfPages = table.getNumberOfPages( page );
+            final int numberOfPages = 1;
             int pageNumber = 1;
 
             while ( true ) {
                 // Draw the table directly on the page as though it is a canvas.
-                final Point point = table.drawOn( page );
+                //final Point point = table.drawOn( page ); // NOTE: obsolete
+                final float[] points = table.drawOn( page );
 
-                if ( !table.hasMoreData() ) {
+                if ( !table.hasMoreData() ) { // NOTE: Forced method to public
                     // Allow the table to be drawn again later.
-                    table.resetRenderedPagesCount();
-                    return point;
+                    //table.resetRenderedPagesCount(); // NOTE: Removed from API
+                    //return point; // NOTE: Return type changed in new API
+                    return points;
                 }
 
-                final float[] pageSize = landscapeMode ? LANDSCAPE_PAGE_SIZE : PORTRAIT_PAGE_SIZE;
+                final float[] pageSize = landscapeMode
+                        ? LANDSCAPE_PAGE_SIZE
+                        : PORTRAIT_PAGE_SIZE;
                 page = new Page( document, pageSize );
 
                 // Draw "Page x of N" at the returned point, where "x" =
                 // pageNumber and "N" = numberOfPages.
-                final String pageCounter = "Page " + pageNumber + " of " //$NON-NLS-1$ //$NON-NLS-2$
+                final String pageCounter = "Page " + pageNumber + " of "
                         + numberOfPages;
-                page.drawString( fonts._footerFont, pageCounter, point.getX(), point.getY() );
+                page.drawString(
+                        fonts._footerFont,
+                        pageCounter,
+                        points[ 0 ], //point.getX(),
+                        points[ 1 ] ); //point.getY() );
 
                 pageNumber++;
             }
@@ -1092,15 +1115,16 @@ public final class PdfTools {
     }
 
     // Generic method to write multi-page table data to a PDF Report.
-    public static Point writeTable( final PDF document,
-                                    final Page page,
-                                    final Point point,
-                                    final PdfFonts fonts,
-                                    final List< List< Cell > > tableData,
-                                    final Table table,
-                                    final int numberOfHeaderRows,
-                                    final boolean autoAdjustColumnWidths,
-                                    final boolean landscapeMode ) {
+    // NOTE: The return type changed in new API; it used to be Point.
+    public static float[] writeTable( final PDF document,
+                                      final Page page,
+                                      final Point point,
+                                      final PdfFonts fonts,
+                                      final List< List< Cell > > tableData,
+                                      final Table table,
+                                      final int numberOfHeaderRows,
+                                      final boolean autoAdjustColumnWidths,
+                                      final boolean landscapeMode ) {
         // Set the data on the provided table.
         try {
             table.setData( tableData, numberOfHeaderRows );
@@ -1111,14 +1135,14 @@ public final class PdfTools {
 
         // Now that the data has been set, auto-adjust columns to fit.
         if ( autoAdjustColumnWidths ) {
-            table.autoAdjustColumnWidths();
+            //table.autoAdjustColumnWidths(); // NOTE: Removed from API
         }
 
         // Allow cell text to wrap so that the table doesn't clip on the page.
         // NOTE: There are two versions of this method. This version
         // tokenizes words vs. splitting words up, which of course is more
         // legible and intelligible in the context of a Project Report.
-        table.wrapAroundCellText();
+        table.wrapAroundCellText(); // NOTE: Elevated method to public access
 
         // Set the desired position for the table on the page.
         table.setPosition( point.getX(), point.getY() );
@@ -1160,7 +1184,9 @@ public final class PdfTools {
 
         // Scale and output the image sources to fit the PDF page destination.
         final double xOffset = PORTRAIT_LEFT_MARGIN;
-        final double yOffset = PORTRAIT_TOP_MARGIN + ( ( chartLabel != null ) ? 30d : 0.0d );
+        final double yOffset = PORTRAIT_TOP_MARGIN + ( ( chartLabel != null )
+                ? 30d
+                : 0.0d );
         double chart2AdjustmentY = 0.0d;
         double legendAdjustmentX = 0.0d;
         double metadataAdjustmentY = 0.0d;
