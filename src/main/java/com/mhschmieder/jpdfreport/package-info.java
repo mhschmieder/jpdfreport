@@ -31,9 +31,5 @@
 /**
  * This package contains utilities and helper methods related to producing
  * reports in the format of PDF graphics.
- *
- * @version 1.0
- *
- * @author Mark Schmieder
  */
 package com.mhschmieder.jpdfreport;

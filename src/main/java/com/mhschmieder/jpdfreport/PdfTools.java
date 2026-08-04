@@ -51,7 +51,6 @@ import com.pdfjet.TextFrame;
 import com.pdfjet.TextLine;
 import org.apache.commons.math3.util.FastMath;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -60,6 +59,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import javax.imageio.ImageIO;
 
 /**
  * This class has a set of tools that are useful for minimizing cut/paste work
@@ -78,12 +79,13 @@ import java.util.Locale;
  *  so I have rewritten that code again using the API docs but haven't had an
  *  application context to test it in yet. I also have found some recent PDF
  *  libraries that might serve as alternatives, and iTextPDF is now free too.
- *  <p>
+ * <p>
  * NOTE: Unfortunately, the actual JAR supplied does not match the API docs so
  *  the evaluation copy may still be v5.75, which doesn't include TextColumn.
  * <p>
  * TODO: Consider switching to Apache PdfBox in conjunction with an add-on
- *  library such as easytable, ph-pdf-layout, pdfbox-layout, or PdfLayoutManager,
+ *  library such as easytable, ph-pdf-layout, pdfbox-layout, or
+ *  PdfLayoutManager,
  *  as pdfJet appears to have been abandoned at the start of the COVID pandemic
  *  in early 2020 and as PdfBox and its add-on high-level layout libraries are
  *  growing quickly in functionality, almost matching or surpassing iText.
@@ -91,33 +93,34 @@ import java.util.Locale;
 public final class PdfTools {
 
     // Declare the default point size per inch.
-    public static final float   POINTS_PER_INCH              = 72f;
+    public static final float POINTS_PER_INCH = 72f;
 
     // Use Letter page size as most common case, for scaling/clipping/etc.
-    public static final float[] PORTRAIT_PAGE_SIZE           = Letter.PORTRAIT;
-    public static final float[] LANDSCAPE_PAGE_SIZE          = Letter.LANDSCAPE;
+    public static final float[] PORTRAIT_PAGE_SIZE = Letter.PORTRAIT;
+    public static final float[] LANDSCAPE_PAGE_SIZE = Letter.LANDSCAPE;
 
     // Declare constants for page margins, using default page size assumption.
-    public static final float   PORTRAIT_LEFT_MARGIN         = 0.75f * POINTS_PER_INCH;
-    public static final float   PORTRAIT_TOP_MARGIN          = 0.75f * POINTS_PER_INCH;
-    public static final float   PORTRAIT_RIGHT_MARGIN        = 0.5f * POINTS_PER_INCH;
-    public static final float   PORTRAIT_BOTTOM_MARGIN       = 1f * POINTS_PER_INCH;
-
-    public static final float   LANDSCAPE_LEFT_MARGIN        = 0.75f * POINTS_PER_INCH;
-    public static final float   LANDSCAPE_TOP_MARGIN         = 0.75f * POINTS_PER_INCH;
-    public static final float   LANDSCAPE_RIGHT_MARGIN       = 0.5f * POINTS_PER_INCH;
-    public static final float   LANDSCAPE_BOTTOM_MARGIN      = 1f * POINTS_PER_INCH;
-
+    public static final float PORTRAIT_LEFT_MARGIN = 0.75f * POINTS_PER_INCH;
+    public static final float PORTRAIT_TOP_MARGIN = 0.75f * POINTS_PER_INCH;
+    public static final float PORTRAIT_RIGHT_MARGIN = 0.5f * POINTS_PER_INCH;
     // We only need to compute the resulting layout size once.
-    public static final float   PORTRAIT_PAGE_LAYOUT_WIDTH   = PORTRAIT_PAGE_SIZE[ 0 ]
-            - PORTRAIT_LEFT_MARGIN - PORTRAIT_RIGHT_MARGIN;
-    public static final float   PORTRAIT_PAGE_LAYOUT_HEIGHT  = PORTRAIT_PAGE_SIZE[ 1 ]
-            - PORTRAIT_TOP_MARGIN - PORTRAIT_BOTTOM_MARGIN;
-
-    public static final float   LANDSCAPE_PAGE_LAYOUT_WIDTH  = LANDSCAPE_PAGE_SIZE[ 0 ]
-            - LANDSCAPE_LEFT_MARGIN - LANDSCAPE_RIGHT_MARGIN;
-    public static final float   LANDSCAPE_PAGE_LAYOUT_HEIGHT = LANDSCAPE_PAGE_SIZE[ 1 ]
-            - LANDSCAPE_TOP_MARGIN - LANDSCAPE_BOTTOM_MARGIN;
+    public static final float PORTRAIT_PAGE_LAYOUT_WIDTH =
+            PORTRAIT_PAGE_SIZE[ 0 ] - PORTRAIT_LEFT_MARGIN
+            - PORTRAIT_RIGHT_MARGIN;
+    public static final float PORTRAIT_BOTTOM_MARGIN = 1f * POINTS_PER_INCH;
+    public static final float PORTRAIT_PAGE_LAYOUT_HEIGHT =
+            PORTRAIT_PAGE_SIZE[ 1 ] - PORTRAIT_TOP_MARGIN
+            - PORTRAIT_BOTTOM_MARGIN;
+    public static final float LANDSCAPE_LEFT_MARGIN = 0.75f * POINTS_PER_INCH;
+    public static final float LANDSCAPE_TOP_MARGIN = 0.75f * POINTS_PER_INCH;
+    public static final float LANDSCAPE_RIGHT_MARGIN = 0.5f * POINTS_PER_INCH;
+    public static final float LANDSCAPE_PAGE_LAYOUT_WIDTH =
+            LANDSCAPE_PAGE_SIZE[ 0 ] - LANDSCAPE_LEFT_MARGIN
+            - LANDSCAPE_RIGHT_MARGIN;
+    public static final float LANDSCAPE_BOTTOM_MARGIN = 1f * POINTS_PER_INCH;
+    public static final float LANDSCAPE_PAGE_LAYOUT_HEIGHT =
+            LANDSCAPE_PAGE_SIZE[ 1 ] - LANDSCAPE_TOP_MARGIN
+            - LANDSCAPE_BOTTOM_MARGIN;
 
     /*
     @SuppressWarnings("nls")
@@ -142,25 +145,19 @@ public final class PdfTools {
     }
     */
 
-    @SuppressWarnings("nls")
-    public static void addEmptyLines( final List< Paragraph > paragraphs,
-                                      final int alignment,
-                                      final Font font,
-                                      final int numberOfLines ) {
-        for ( int i = 0; i < numberOfLines; i++ ) {
-            addParagraph( paragraphs, alignment, font, "" );
-        }
-    }
-
-    public static void addParagraph( final List< Paragraph > paragraphs,
-                                     final int alignment,
-                                     final Font font,
-                                     final String text ) {
-        final TextLine textLine = new TextLine( font, text );
-        final Paragraph paragraph = new Paragraph();
-        paragraph.setAlignment( alignment );
-        paragraph.add( textLine );
-        paragraphs.add( paragraph );
+    // Utility method to add a stylized table cell, with custom justification.
+    public static void addTableCell( final List< Cell > rowData,
+                                     final PdfFonts fonts,
+                                     final int backgroundColor,
+                                     final int textFillColor,
+                                     final int align,
+                                     final String cellValue ) {
+        addTableCell( rowData,
+                      fonts._tableCellFont,
+                      backgroundColor,
+                      textFillColor,
+                      align,
+                      cellValue );
     }
 
     // Utility method to add a stylized table cell, with custom justification.
@@ -170,16 +167,14 @@ public final class PdfTools {
                                      final int textFillColor,
                                      final int align,
                                      final String cellValue ) {
-        addTableCell( rowData, 1, font, backgroundColor, textFillColor, align, true, cellValue );
-    }
-
-    // Utility method to add a stylized table cell, with center justification.
-    public static void addTableCell( final List< Cell > rowData,
-                                     final Font font,
-                                     final int backgroundColor,
-                                     final int textFillColor,
-                                     final String cellValue ) {
-        addTableCell( rowData, 1, font, backgroundColor, textFillColor, cellValue );
+        addTableCell( rowData,
+                      1,
+                      font,
+                      backgroundColor,
+                      textFillColor,
+                      align,
+                      true,
+                      cellValue );
     }
 
     // Utility method to add a stylized table cell, with custom justification.
@@ -212,6 +207,33 @@ public final class PdfTools {
 
     // Utility method to add a stylized table cell, with center justification.
     public static void addTableCell( final List< Cell > rowData,
+                                     final PdfFonts fonts,
+                                     final int backgroundColor,
+                                     final int textFillColor,
+                                     final String cellValue ) {
+        addTableCell( rowData,
+                      fonts._tableCellFont,
+                      backgroundColor,
+                      textFillColor,
+                      cellValue );
+    }
+
+    // Utility method to add a stylized table cell, with center justification.
+    public static void addTableCell( final List< Cell > rowData,
+                                     final Font font,
+                                     final int backgroundColor,
+                                     final int textFillColor,
+                                     final String cellValue ) {
+        addTableCell( rowData,
+                      1,
+                      font,
+                      backgroundColor,
+                      textFillColor,
+                      cellValue );
+    }
+
+    // Utility method to add a stylized table cell, with center justification.
+    public static void addTableCell( final List< Cell > rowData,
                                      final int columnSpan,
                                      final Font font,
                                      final int backgroundColor,
@@ -225,6 +247,21 @@ public final class PdfTools {
                       Align.CENTER,
                       true,
                       cellValue );
+    }
+
+    // Utility method to add a stylized table cell, with center justification.
+    public static void addTableCell( final List< Cell > rowData,
+                                     final PdfFonts fonts,
+                                     final String cellValue ) {
+        addTableCell( rowData, fonts, Align.CENTER, cellValue );
+    }
+
+    // Utility method to add a stylized table cell, with custom justification.
+    public static void addTableCell( final List< Cell > rowData,
+                                     final PdfFonts fonts,
+                                     final int align,
+                                     final String cellValue ) {
+        addTableCell( rowData, fonts, align, true, cellValue );
     }
 
     // Utility method to add a stylized table cell, with custom justification.
@@ -243,45 +280,6 @@ public final class PdfTools {
                       cellValue );
     }
 
-    // Utility method to add a stylized table cell, with custom justification.
-    public static void addTableCell( final List< Cell > rowData,
-                                     final PdfFonts fonts,
-                                     final int backgroundColor,
-                                     final int textFillColor,
-                                     final int align,
-                                     final String cellValue ) {
-        addTableCell( rowData,
-                      fonts._tableCellFont,
-                      backgroundColor,
-                      textFillColor,
-                      align,
-                      cellValue );
-    }
-
-    // Utility method to add a stylized table cell, with center justification.
-    public static void addTableCell( final List< Cell > rowData,
-                                     final PdfFonts fonts,
-                                     final int backgroundColor,
-                                     final int textFillColor,
-                                     final String cellValue ) {
-        addTableCell( rowData, fonts._tableCellFont, backgroundColor, textFillColor, cellValue );
-    }
-
-    // Utility method to add a stylized table cell, with custom justification.
-    public static void addTableCell( final List< Cell > rowData,
-                                     final PdfFonts fonts,
-                                     final int align,
-                                     final String cellValue ) {
-        addTableCell( rowData, fonts, align, true, cellValue );
-    }
-
-    // Utility method to add a stylized table cell, with center justification.
-    public static void addTableCell( final List< Cell > rowData,
-                                     final PdfFonts fonts,
-                                     final String cellValue ) {
-        addTableCell( rowData, fonts, Align.CENTER, cellValue );
-    }
-
     // Utility method to avoid indexing errors or null cell pointers in sparse
     // tables. Not used currently, but should be applied to all tables.
     public static void appendMissingCells( final List< List< Cell > > tableData,
@@ -295,32 +293,9 @@ public final class PdfTools {
                     dataRow.add( new Cell( tableCellFont ) );
                 }
                 dataRow.get( dataRowColumns - 1 )
-                        .setColSpan( ( numOfColumns - dataRowColumns ) + 1 );
+                       .setColSpan( ( numOfColumns - dataRowColumns ) + 1 );
             }
         }
-    }
-
-    // Generic method to create PDF-ready Information Table Data.
-    public static List< List< Cell > > createInformationTableData(
-            final PdfFonts borderlessTableFonts,
-            final int align,
-            final String[] information )
-            throws Exception {
-        // Information tables only have one column, with multiple rows.
-        final List< List< Cell > > informationTableData = new ArrayList<>();
-
-        // Push all the Information fields to unique rows (borderless).
-        for ( final String element : information ) {
-            final List< Cell > informationRowData = new ArrayList<>();
-            PdfTools.addTableCell( informationRowData,
-                                   borderlessTableFonts,
-                                   align,
-                                   false,
-                                   element );
-            informationTableData.add( informationRowData );
-        }
-
-        return informationTableData;
     }
 
     // Utility method to create a stylized table with the given column names.
@@ -328,7 +303,11 @@ public final class PdfTools {
                                      final PdfFonts fonts,
                                      final String[] columnNames,
                                      final boolean landscapeMode ) {
-        return createTable( tableData, fonts, columnNames, null, landscapeMode );
+        return createTable( tableData,
+                            fonts,
+                            columnNames,
+                            null,
+                            landscapeMode );
     }
 
     // Utility method to create a stylized table with the given column names.
@@ -352,25 +331,24 @@ public final class PdfTools {
                                      final PdfFonts fonts,
                                      final String[] spanNames,
                                      final int[] spanLengths,
-                                     final int labelBackgroundColor,
-                                     final int labelTextFillColor,
                                      final String[] columnNames,
                                      final int numberOfColumns,
+                                     final int[] columnWidthsInPixels,
                                      final boolean landscapeMode ) {
         return createTable( tableData,
                             fonts,
                             spanNames,
                             spanLengths,
-                            labelBackgroundColor,
-                            labelTextFillColor,
+                            PdfColors.TABLE_LABEL_BACKGROUND_COLOR,
+                            PdfColors.TABLE_LABEL_TEXT_FILL_COLOR,
                             columnNames,
                             numberOfColumns,
-                            null,
+                            columnWidthsInPixels,
                             landscapeMode );
     }
 
     // Utility method to create a labeled table with the given column names.
-    @SuppressWarnings("nls")
+    @SuppressWarnings( "nls" )
     public static Table createTable( final List< List< Cell > > tableData,
                                      final PdfFonts fonts,
                                      final String[] spanNames,
@@ -390,8 +368,9 @@ public final class PdfTools {
         // Determine the scale factor for column widths, which are expressed in
         // pixels but need to be recalculated in points based on the page layout
         // width (which accounts for margins, and landscape vs. portrait mode).
-        final float columnWidthScaleFactor = getColumnWidthScaleFactor( columnWidthsInPixels,
-                                                                        landscapeMode );
+        final float columnWidthScaleFactor = getColumnWidthScaleFactor(
+                columnWidthsInPixels,
+                landscapeMode );
 
         // Write the span names for the table.
         // TODO: Even though it's unlikely we'll have manual column widths in
@@ -421,7 +400,8 @@ public final class PdfTools {
                 if ( columnWidthsInPixels != null ) {
                     float columnSpanWidth = 0f;
                     for ( int i = 0; i < columnSpan; i++ ) {
-                        final float columnWidth = columnWidthsInPixels[ columnWidthIndex++ ]
+                        final float columnWidth =
+                                columnWidthsInPixels[ columnWidthIndex++ ]
                                 * columnWidthScaleFactor;
                         columnSpanWidth += columnWidth;
                     }
@@ -437,10 +417,12 @@ public final class PdfTools {
                 // indexing crashes thanks to look-ahead to non-existent columns
                 // in the PDFjet source code.
                 columnBlankEndIndex = ( spanLengthIndex >= spanLengths.length )
-                    ? numberOfColumns - 1
-                    : ( columnBlankStartIndex + columnSpan ) - 1 - 1;
-                for ( int columnBlankIndex =
-                                           columnBlankStartIndex; columnBlankIndex <= columnBlankEndIndex; columnBlankIndex++ ) {
+                                      ? numberOfColumns - 1
+                                      : ( columnBlankStartIndex + columnSpan )
+                                        - 1 - 1;
+                for ( int columnBlankIndex = columnBlankStartIndex;
+                      columnBlankIndex <= columnBlankEndIndex;
+                      columnBlankIndex++ ) {
                     addTableCell( spanHeaders,
                                   fonts._tableHeaderFont,
                                   labelBackgroundColor,
@@ -479,9 +461,11 @@ public final class PdfTools {
                     // column width now, after scaling from pixels to points.
                     // TODO: Modify the addTableCell method to do this?
                     if ( columnWidthsInPixels != null ) {
-                        final float columnWidth = columnWidthsInPixels[ columnWidthIndex ]
+                        final float columnWidth =
+                                columnWidthsInPixels[ columnWidthIndex ]
                                 * columnWidthScaleFactor;
-                        columnHeaders.get( columnWidthIndex ).setWidth( columnWidth );
+                        columnHeaders.get( columnWidthIndex )
+                                     .setWidth( columnWidth );
                         columnWidthIndex++;
                     }
                 }
@@ -510,7 +494,9 @@ public final class PdfTools {
                 // have to blank-fill the unused columns, or we get run-time
                 // indexing crashes thanks to look-ahead to non-existent columns
                 // in the PDFjet source code.
-                for ( int i = multiColumnHeaderIndex + 1; i < numberOfColumns; i++ ) {
+                for ( int i = multiColumnHeaderIndex + 1;
+                      i < numberOfColumns;
+                      i++ ) {
                     addTableCell( columnHeaders,
                                   fonts._tableHeaderFont,
                                   PdfColors.TABLE_HEADER_BACKGROUND_COLOR,
@@ -523,6 +509,51 @@ public final class PdfTools {
         }
 
         return table;
+    }
+
+    public static float getColumnWidthScaleFactor( final int[] columnWidthsInPixels,
+                                                   final boolean landscapeMode ) {
+        // First calculate the total table width, expressed in pixels.
+        // TODO: Take advantage of new Java 8 functional programming features.
+        float tableWidthPixels = 0.0f;
+        if ( columnWidthsInPixels != null ) {
+            for ( final int columnWidth : columnWidthsInPixels ) {
+                tableWidthPixels += columnWidth;
+            }
+        }
+
+        // Determine the scale factor for column widths, which are expressed in
+        // pixels but need to be recalculated in points based on the page layout
+        // width (which accounts for margins).
+        final float pageWidth = landscapeMode
+                                ? LANDSCAPE_PAGE_LAYOUT_WIDTH
+                                : PORTRAIT_PAGE_LAYOUT_WIDTH;
+
+        return ( tableWidthPixels > 0.0f )
+               ? pageWidth / tableWidthPixels
+               : 1.0f;
+    }
+
+    // Utility method to create a labeled table with the given column names.
+    public static Table createTable( final List< List< Cell > > tableData,
+                                     final PdfFonts fonts,
+                                     final String[] spanNames,
+                                     final int[] spanLengths,
+                                     final int labelBackgroundColor,
+                                     final int labelTextFillColor,
+                                     final String[] columnNames,
+                                     final int numberOfColumns,
+                                     final boolean landscapeMode ) {
+        return createTable( tableData,
+                            fonts,
+                            spanNames,
+                            spanLengths,
+                            labelBackgroundColor,
+                            labelTextFillColor,
+                            columnNames,
+                            numberOfColumns,
+                            null,
+                            landscapeMode );
     }
 
     // Utility method to create a labeled table with the given column names.
@@ -543,27 +574,6 @@ public final class PdfTools {
                             landscapeMode );
     }
 
-    // Utility method to create a labeled table with the given column names.
-    public static Table createTable( final List< List< Cell > > tableData,
-                                     final PdfFonts fonts,
-                                     final String[] spanNames,
-                                     final int[] spanLengths,
-                                     final String[] columnNames,
-                                     final int numberOfColumns,
-                                     final int[] columnWidthsInPixels,
-                                     final boolean landscapeMode ) {
-        return createTable( tableData,
-                            fonts,
-                            spanNames,
-                            spanLengths,
-                            PdfColors.TABLE_LABEL_BACKGROUND_COLOR,
-                            PdfColors.TABLE_LABEL_TEXT_FILL_COLOR,
-                            columnNames,
-                            numberOfColumns,
-                            columnWidthsInPixels,
-                            landscapeMode );
-    }
-
     public static Table createTable( final List< List< Cell > > tableData,
                                      final PdfFonts fonts,
                                      final String[] spanNames,
@@ -581,38 +591,15 @@ public final class PdfTools {
                             landscapeMode );
     }
 
-    public static float getColumnWidthScaleFactor( final int[] columnWidthsInPixels,
-                                                   final boolean landscapeMode ) {
-        // First calculate the total table width, expressed in pixels.
-        // TODO: Take advantage of new Java 8 functional programming features.
-        float tableWidthPixels = 0.0f;
-        if ( columnWidthsInPixels != null ) {
-            for ( final int columnWidth : columnWidthsInPixels ) {
-                tableWidthPixels += columnWidth;
-            }
-        }
-
-        // Determine the scale factor for column widths, which are expressed in
-        // pixels but need to be recalculated in points based on the page layout
-        // width (which accounts for margins).
-        final float pageWidth = landscapeMode
-            ? LANDSCAPE_PAGE_LAYOUT_WIDTH
-            : PORTRAIT_PAGE_LAYOUT_WIDTH;
-
-        return ( tableWidthPixels > 0.0f )
-            ? pageWidth / tableWidthPixels
-            : 1.0f;
-    }
-
     // This is the main method to get a PDF document from PDFjet.
     public static PDF getDocument( final OutputStream outputStream,
                                    final ProductBranding productBranding,
                                    final String reportSubtitle,
                                    final String projectName,
-                                   final String designer )
-            throws Exception {
+                                   final String designer ) throws Exception {
         // Generate the report file title for use within the PDF report.
-        final String reportTitle = getReportTitle( productBranding, reportSubtitle );
+        final String reportTitle = getReportTitle( productBranding,
+                                                   reportSubtitle );
 
         // Set the main subject header, as the project name.
         final String reportSubject = projectName;
@@ -620,8 +607,10 @@ public final class PdfTools {
         // Note that PDFjet uses the author to set the creator field.
         final String reportAuthor = designer;
 
-        return getDocument(
-                outputStream, reportTitle, reportSubject, reportAuthor );
+        return getDocument( outputStream,
+                            reportTitle,
+                            reportSubject,
+                            reportAuthor );
     }
 
     // This is the main method to get a PDF document from PDFjet.
@@ -654,38 +643,9 @@ public final class PdfTools {
         return document;
     }
 
-    @SuppressWarnings("nls")
-    public static Image getImageSnapshot( final PDF document, final BufferedImage bufferedImage ) {
-        try ( final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream() ) {
-            final boolean succeeded = ImageIO.write( bufferedImage, "png", byteArrayOutputStream );
-            if ( !succeeded ) {
-                return null;
-            }
-
-            final byte[] imageByteArray = byteArrayOutputStream.toByteArray();
-            try ( final InputStream bais = new ByteArrayInputStream( imageByteArray ) ) {
-                return new Image( document, bais, ImageType.PNG );
-            }
-            catch ( final Exception e ) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-        catch ( final Exception e ) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    // Generic method to get the privacy clause for a PDF report.
-    // TODO: Move this to a more general package for reuse in other formats.
-    public static String getPrivacyClause() {
-        return "This document is for discussion and/or bid purposes only."; //$NON-NLS-1$
-    }
-
     // Generic method to get the report title for a PDF report.
     // TODO: Move this to a more general package for reuse in other formats.
-    @SuppressWarnings("nls")
+    @SuppressWarnings( "nls" )
     public static String getReportTitle( final ProductBranding productBranding,
                                          final String reportSubtitle ) {
         final StringBuilder reportTitle = new StringBuilder();
@@ -702,11 +662,14 @@ public final class PdfTools {
         // Determine the scale factor for column widths, which are expressed
         // in pixels but need to be recalculated in points based on the page
         // layout width (which accounts for margins).
-        final float columnWidthScaleFactor = getColumnWidthScaleFactor( columnWidthsInPixels,
-                                                                        landscapeMode );
+        final float columnWidthScaleFactor = getColumnWidthScaleFactor(
+                columnWidthsInPixels,
+                landscapeMode );
 
         // If manual column widths are present, set column widths now.
-        setColumnWidths( rowData, columnWidthsInPixels, columnWidthScaleFactor );
+        setColumnWidths( rowData,
+                         columnWidthsInPixels,
+                         columnWidthScaleFactor );
     }
 
     public static void setColumnWidths( final List< Cell > rowData,
@@ -716,46 +679,17 @@ public final class PdfTools {
         // scaling from pixels to points.
         // TODO: Modify the addTableCell method to do this?
         if ( columnWidthsInPixels != null ) {
-            for ( int columnWidthIndex =
-                                       0; columnWidthIndex < columnWidthsInPixels.length; columnWidthIndex++ ) {
-                final float columnWidth = columnWidthsInPixels[ columnWidthIndex ]
+            for ( int columnWidthIndex = 0;
+                  columnWidthIndex < columnWidthsInPixels.length;
+                  columnWidthIndex++ ) {
+                final float columnWidth =
+                        columnWidthsInPixels[ columnWidthIndex ]
                         * columnWidthScaleFactor;
                 rowData.get( columnWidthIndex ).setWidth( columnWidth );
             }
         }
     }
 
-    /*
-    public static void writeFooter( final TextColumn column,
-                                     final PdfFonts fonts,
-                                     final ProductBranding productBranding,
-                                     final Locale locale ) {
-        // Write the name/version of this program and the current user locale as
-        // the footer to the first page.
-        final String savedFrom = FileUtilities.getSavedFrom( productBranding, locale );
-        addParagraph( column, Align.CENTER, fonts._footerFont, savedFrom );
-
-        // For legal reasons, we also add a privacy clause.
-        final String privacyClause = getPrivacyClause();
-        addParagraph( column, Align.CENTER, fonts._footerFont, privacyClause );
-    }
-    */
-
-    public static void writeFooter( final List< Paragraph > paragraphs,
-                                    final PdfFonts fonts,
-                                    final ProductBranding productBranding,
-                                    final Locale locale ) {
-        // Write the name/version of this program and the current user locale as
-        // the footer to the first page.
-        final String savedFrom = BrandingUtilities.getSavedFrom( productBranding, locale );
-        addParagraph( paragraphs, Align.CENTER, fonts._footerFont, savedFrom );
-
-        // For legal reasons, we also add a privacy clause.
-        final String privacyClause = getPrivacyClause();
-        addParagraph( paragraphs, Align.CENTER, fonts._footerFont, privacyClause );
-    }
-
-    /*
     public static void writeFrontPage( final PDF document,
                                        final PdfFonts fonts,
                                        final ProductBranding productBranding,
@@ -767,59 +701,7 @@ public final class PdfTools {
                                        final String date,
                                        final boolean useProjectNotes,
                                        final String projectNotes,
-                                       final Locale locale )
-            throws Exception {
-        // Make a new Page for the Front Page content.
-        final Page frontPage = new Page( document, PORTRAIT_PAGE_SIZE );
-
-        // The Front Page is text-only (no tables) so can use a Text Column.
-        final TextColumn column = new TextColumn();
-        column.setLineBetweenParagraphs( true );
-        column.setLineSpacing( 1.0d );
-
-        // We seem to have to manually set our positioning on the page.
-        column.setPosition( PORTRAIT_LEFT_MARGIN, PORTRAIT_TOP_MARGIN );
-        column.setSize( PORTRAIT_PAGE_LAYOUT_WIDTH, PORTRAIT_PAGE_LAYOUT_HEIGHT );
-
-        // Generate the report file title for use within the PDF report.
-        final String reportTitle = getReportTitle( productBranding, reportSubtitle );
-
-        // Write the header.
-        writeHeader( column, fonts, reportTitle );
-
-        // Conditionally write the Project Properties as the preface.
-        if ( exportProjectProperties ) {
-            writeProjectProperties( column,
-                                    fonts,
-                                    projectName,
-                                    venue,
-                                    designer,
-                                    date,
-                                    useProjectNotes,
-                                    projectNotes );
-        }
-
-        // Write the footer.
-        writeFooter( column, fonts, productBranding, locale );
-
-        // Add the Text Column to the Front Page.
-        column.drawOn( frontPage );
-    }
-    */
-    
-    public static void writeFrontPage( final PDF document,
-                                       final PdfFonts fonts,
-                                       final ProductBranding productBranding,
-                                       final String reportSubtitle,
-                                       final boolean exportProjectProperties,
-                                       final String projectName,
-                                       final String venue,
-                                       final String designer,
-                                       final String date,
-                                       final boolean useProjectNotes,
-                                       final String projectNotes,
-                                       final Locale locale )
-            throws Exception {
+                                       final Locale locale ) throws Exception {
         // Make a new Page for the Front Page content.
         final Page frontPage = new Page( document, PORTRAIT_PAGE_SIZE );
 
@@ -827,8 +709,8 @@ public final class PdfTools {
         final List< Paragraph > paragraphs = new ArrayList<>();
 
         // Generate the report file title for use within the PDF report.
-        final String reportTitle = getReportTitle(
-                productBranding, reportSubtitle );
+        final String reportTitle = getReportTitle( productBranding,
+                                                   reportSubtitle );
 
         // Write the header.
         writeHeader( paragraphs, fonts, reportTitle );
@@ -865,126 +747,66 @@ public final class PdfTools {
         textFrame.drawOn( frontPage );
     }
 
-    /*
-    // Generic method to write the header for a PDF Report.
-    public static void writeHeader( final TextColumn column,
-                                     final PdfFonts fonts,
-                                     final String reportTitle ) {
-        addParagraph( column, Align.CENTER, fonts._headerFont, reportTitle );
+    public static void writeFooter( final List< Paragraph > paragraphs,
+                                    final PdfFonts fonts,
+                                    final ProductBranding productBranding,
+                                    final Locale locale ) {
+        // Write the name/version of this program and the current user locale as
+        // the footer to the first page.
+        final String savedFrom
+                = BrandingUtilities.getSavedFrom( productBranding, locale );
+        addParagraph( paragraphs, Align.CENTER, fonts._footerFont, savedFrom );
+
+        // For legal reasons, we also add a privacy clause.
+        final String privacyClause = getPrivacyClause();
+        addParagraph( paragraphs,
+                      Align.CENTER,
+                      fonts._footerFont,
+                      privacyClause );
     }
-    */
-    
+
+    // Generic method to get the privacy clause for a PDF report.
+    // TODO: Move this to a more general package for reuse in other formats.
+    public static String getPrivacyClause() {
+        return "This document is for discussion and/or bid purposes only.";
+        //$NON-NLS-1$
+    }
+
     // Generic method to write the header for a PDF Report.
     public static void writeHeader( final List< Paragraph > paragraphs,
                                     final PdfFonts fonts,
                                     final String reportTitle ) {
-        addParagraph( paragraphs, Align.CENTER, fonts._headerFont, reportTitle );
+        addParagraph( paragraphs,
+                      Align.CENTER,
+                      fonts._headerFont,
+                      reportTitle );
     }
 
-    // Generic method to write a borderless single-column Information Table.
-    // NOTE: The return type changed in the new API; it used to be Point.
-    public static float[] writeInformationTable(
-            final PDF document,
-            final Page page,
-            final Point initialPoint,
-            final PdfFonts borderlessTableFonts,
-            final int align,
-            final String[] information ) throws Exception {
-        // Information tables only have one column, with multiple rows.
-        final List< List< Cell > > informationTableData
-                = createInformationTableData(
-                        borderlessTableFonts,
-                align,
-                information );
-
-        // Write the table to as many pages as are required to fit.
-        return writeInformationTable(
-                document,
-                page,
-                initialPoint,
-                borderlessTableFonts,
-                informationTableData );
-    }
-
-    // Generic method to write a borderless single-column Information Table.
-    // NOTE: The return type changed in the new API; it used to be Point.
-    public static float[] writeInformationTable(
-            final PDF document,
-            final Page page,
-            final Point initialPoint,
-            final PdfFonts borderlessTableFonts,
-            final List< List< Cell > > informationTableData ) {
-        // Get a table to use for the Information fields, sans headers.
-        final Table informationTable = new Table();
-
-        // Set the table to borderless, to match our on-screen look and feel.
-        //informationTable.setNoCellBorders(); // NOTE: Replaced in API?
-        informationTable.setCellBorders( false );
-
-        // Write the table to as many pages as are required to fit.
-        // NOTE: The return type changed in the new API; it used to be Point.
-        Point point = new Point( initialPoint.getX(), initialPoint.getY() );
-        return writeTable(
-                document,
-                page,
-                point,
-                borderlessTableFonts,
-                informationTableData,
-                informationTable,
-                //Table.DATA_HAS_0_HEADER_ROWS, // NOTE: Obsolete API version
-                Table.WITH_0_HEADER_ROWS,
-                true,
-                false );
+    public static void addParagraph( final List< Paragraph > paragraphs,
+                                     final int alignment,
+                                     final Font font,
+                                     final String text ) {
+        final TextLine textLine = new TextLine( font, text );
+        final Paragraph paragraph = new Paragraph();
+        paragraph.setAlignment( alignment );
+        paragraph.add( textLine );
+        paragraphs.add( paragraph );
     }
 
     /*
-    // Generic method to export Project Properties to PDF.
-    public static void writeProjectProperties( final TextColumn column,
-                                               final PdfFonts fonts,
-                                               final String projectName,
-                                               final String venue,
-                                               final String designer,
-                                               final String date,
-                                               final boolean useProjectNotes,
-                                               final String projectNotes ) {
-        // Pad this report sub-section to better set it apart visually.
-        addEmptyLines( column, Align.CENTER, fonts._headerFont, 2 );
+    public static void writeFooter( final TextColumn column,
+                                     final PdfFonts fonts,
+                                     final ProductBranding productBranding,
+                                     final Locale locale ) {
+        // Write the name/version of this program and the current user locale as
+        // the footer to the first page.
+        final String savedFrom = FileUtilities.getSavedFrom( productBranding,
+         locale );
+        addParagraph( column, Align.CENTER, fonts._footerFont, savedFrom );
 
-        // Write the Project Name as the main header for the Project
-        // Properties section.
-        final StringBuilder projectHeader = new StringBuilder( "Project: " ); //$NON-NLS-1$
-        projectHeader.append( projectName );
-        addParagraph( column, Align.CENTER, fonts._propertiesHeaderFont, projectHeader.toString() );
-
-        // Write the remaining Project Properties as a pseudo-table.
-        final StringBuilder venueItem = new StringBuilder( "Venue: " ); //$NON-NLS-1$
-        venueItem.append( venue );
-        addParagraph( column, Align.CENTER, fonts._propertiesFont, venueItem.toString() );
-
-        final StringBuilder designerItem = new StringBuilder( "Designer: " ); //$NON-NLS-1$
-        designerItem.append( designer );
-        addParagraph( column, Align.CENTER, fonts._propertiesFont, designerItem.toString() );
-
-        final StringBuilder dateItem = new StringBuilder( "Date: " ); //$NON-NLS-1$
-        dateItem.append( date );
-        addParagraph( column, Align.CENTER, fonts._propertiesFont, dateItem.toString() );
-
-        // Conditionally write the multi-line Project Notes.
-        // TODO: Once up to Java 17, make use of Text Blocks?
-        if ( useProjectNotes ) {
-            final StringBuilder notesHeader = new StringBuilder( "Project Notes: " ); //$NON-NLS-1$
-            addParagraph( column, Align.CENTER, fonts._notesHeaderFont, notesHeader.toString() );
-
-            // Iterate over each line of the Project Notes.
-            final String notesItem = projectNotes;
-            final String lines[] = notesItem.split( "\\r?\\n" ); //$NON-NLS-1$
-            for ( final String line : lines ) {
-                addParagraph( column, Align.LEFT, fonts._notesFont, line );
-            }
-        }
-
-        // Pad this report sub-section to better set it apart visually.
-        addEmptyLines( column, Align.CENTER, fonts._headerFont, 2 );
+        // For legal reasons, we also add a privacy clause.
+        final String privacyClause = getPrivacyClause();
+        addParagraph( column, Align.CENTER, fonts._footerFont, privacyClause );
     }
     */
 
@@ -1002,7 +824,8 @@ public final class PdfTools {
 
         // Write the Project Name as the main header for the Project
         // Properties section.
-        final StringBuilder projectHeader = new StringBuilder( "Project: " ); //$NON-NLS-1$
+        final StringBuilder projectHeader
+                = new StringBuilder( "Project: " ); //$NON-NLS-1$
         projectHeader.append( projectName );
         addParagraph( paragraphs,
                       Align.CENTER,
@@ -1010,22 +833,35 @@ public final class PdfTools {
                       projectHeader.toString() );
 
         // Write the remaining Project Properties as a pseudo-table.
-        final StringBuilder venueItem = new StringBuilder( "Venue: " ); //$NON-NLS-1$
+        final StringBuilder venueItem
+                = new StringBuilder( "Venue: " ); //$NON-NLS-1$
         venueItem.append( venue );
-        addParagraph( paragraphs, Align.CENTER, fonts._propertiesFont, venueItem.toString() );
+        addParagraph( paragraphs,
+                      Align.CENTER,
+                      fonts._propertiesFont,
+                      venueItem.toString() );
 
-        final StringBuilder designerItem = new StringBuilder( "Designer: " ); //$NON-NLS-1$
+        final StringBuilder designerItem
+                = new StringBuilder( "Designer: " ); //$NON-NLS-1$
         designerItem.append( designer );
-        addParagraph( paragraphs, Align.CENTER, fonts._propertiesFont, designerItem.toString() );
+        addParagraph( paragraphs,
+                      Align.CENTER,
+                      fonts._propertiesFont,
+                      designerItem.toString() );
 
-        final StringBuilder dateItem = new StringBuilder( "Date: " ); //$NON-NLS-1$
+        final StringBuilder dateItem
+                = new StringBuilder( "Date: " ); //$NON-NLS-1$
         dateItem.append( date );
-        addParagraph( paragraphs, Align.CENTER, fonts._propertiesFont, dateItem.toString() );
+        addParagraph( paragraphs,
+                      Align.CENTER,
+                      fonts._propertiesFont,
+                      dateItem.toString() );
 
         // Conditionally write the multi-line Project Notes.
         // TODO: Once up to Java 17, make use of Text Blocks?
         if ( useProjectNotes ) {
-            final StringBuilder notesHeader = new StringBuilder( "Project Notes: " ); //$NON-NLS-1$
+            final StringBuilder notesHeader = new StringBuilder(
+                    "Project Notes: " ); //$NON-NLS-1$
             addParagraph( paragraphs,
                           Align.CENTER,
                           fonts._notesHeaderFont,
@@ -1043,76 +879,213 @@ public final class PdfTools {
         addEmptyLines( paragraphs, Align.CENTER, fonts._headerFont, 2 );
     }
 
-    // Generic method to write a section header for a PDF Report.
-    public static void writeSectionHeader( final Page page,
-                                           final Point point,
-                                           final PdfFonts fonts,
-                                           final String sectionTitle ) {
-        final TextLine titleLine = new TextLine( fonts._sectionHeaderFont, sectionTitle );
+    /*
+    public static void writeFrontPage( final PDF document,
+                                       final PdfFonts fonts,
+                                       final ProductBranding productBranding,
+                                       final String reportSubtitle,
+                                       final boolean exportProjectProperties,
+                                       final String projectName,
+                                       final String venue,
+                                       final String designer,
+                                       final String date,
+                                       final boolean useProjectNotes,
+                                       final String projectNotes,
+                                       final Locale locale )
+            throws Exception {
+        // Make a new Page for the Front Page content.
+        final Page frontPage = new Page( document, PORTRAIT_PAGE_SIZE );
 
-        // Center the section header on the page.
-        final float x = 0.5f * ( page.getWidth() - titleLine.getWidth() );
-        final float y = point.getY();
-        titleLine.setPosition( x, y );
+        // The Front Page is text-only (no tables) so can use a Text Column.
+        final TextColumn column = new TextColumn();
+        column.setLineBetweenParagraphs( true );
+        column.setLineSpacing( 1.0d );
 
-        try {
-            titleLine.drawOn( page );
+        // We seem to have to manually set our positioning on the page.
+        column.setPosition( PORTRAIT_LEFT_MARGIN, PORTRAIT_TOP_MARGIN );
+        column.setSize( PORTRAIT_PAGE_LAYOUT_WIDTH,
+        PORTRAIT_PAGE_LAYOUT_HEIGHT );
+
+        // Generate the report file title for use within the PDF report.
+        final String reportTitle = getReportTitle( productBranding,
+        reportSubtitle );
+
+        // Write the header.
+        writeHeader( column, fonts, reportTitle );
+
+        // Conditionally write the Project Properties as the preface.
+        if ( exportProjectProperties ) {
+            writeProjectProperties( column,
+                                    fonts,
+                                    projectName,
+                                    venue,
+                                    designer,
+                                    date,
+                                    useProjectNotes,
+                                    projectNotes );
         }
-        catch ( final Exception e ) {
-            e.printStackTrace();
+
+        // Write the footer.
+        writeFooter( column, fonts, productBranding, locale );
+
+        // Add the Text Column to the Front Page.
+        column.drawOn( frontPage );
+    }
+    */
+
+    @SuppressWarnings( "nls" )
+    public static void addEmptyLines( final List< Paragraph > paragraphs,
+                                      final int alignment,
+                                      final Font font,
+                                      final int numberOfLines ) {
+        for ( int i = 0; i < numberOfLines; i++ ) {
+            addParagraph( paragraphs, alignment, font, "" );
         }
     }
 
-    // Implementation method to write a multi-page table to a PDF Report.
-    // NOTE: Return type changed in new API; it used to be Point
-    public static float[] writeTable( final PDF document,
-                                      final Page firstPage,
-                                      final PdfFonts fonts,
-                                      final Table table,
-                                      final boolean landscapeMode ) {
-        try {
-            Page page = firstPage;
+    /*
+    // Generic method to write the header for a PDF Report.
+    public static void writeHeader( final TextColumn column,
+                                     final PdfFonts fonts,
+                                     final String reportTitle ) {
+        addParagraph( column, Align.CENTER, fonts._headerFont, reportTitle );
+    }
+    */
 
-            // NOTE: New API doesn't have this method, so limit to one page?
-            //final int numberOfPages = table.getNumberOfPages( page );
-            final int numberOfPages = 1;
-            int pageNumber = 1;
+    // Generic method to write a borderless single-column Information Table.
+    // NOTE: The return type changed in the new API; it used to be Point.
+    public static float[] writeInformationTable( final PDF document,
+                                                 final Page page,
+                                                 final Point initialPoint,
+                                                 final PdfFonts borderlessTableFonts,
+                                                 final int align,
+                                                 final String[] information )
+            throws Exception {
+        // Information tables only have one column, with multiple rows.
+        final List< List< Cell > > informationTableData
+                = createInformationTableData( borderlessTableFonts,
+                                              align,
+                                              information );
 
-            while ( true ) {
-                // Draw the table directly on the page as though it is a canvas.
-                //final Point point = table.drawOn( page ); // NOTE: obsolete
-                final float[] points = table.drawOn( page );
+        // Write the table to as many pages as are required to fit.
+        return writeInformationTable( document,
+                                      page,
+                                      initialPoint,
+                                      borderlessTableFonts,
+                                      informationTableData );
+    }
 
-                if ( !table.hasMoreData() ) { // NOTE: Forced method to public
-                    // Allow the table to be drawn again later.
-                    //table.resetRenderedPagesCount(); // NOTE: Removed from API
-                    //return point; // NOTE: Return type changed in new API
-                    return points;
-                }
+    // Generic method to create PDF-ready Information Table Data.
+    public static List< List< Cell > > createInformationTableData( final PdfFonts borderlessTableFonts,
+                                                                   final int align,
+                                                                   final String[] information )
+            throws Exception {
+        // Information tables only have one column, with multiple rows.
+        final List< List< Cell > > informationTableData = new ArrayList<>();
 
-                final float[] pageSize = landscapeMode
-                        ? LANDSCAPE_PAGE_SIZE
-                        : PORTRAIT_PAGE_SIZE;
-                page = new Page( document, pageSize );
+        // Push all the Information fields to unique rows (borderless).
+        for ( final String element : information ) {
+            final List< Cell > informationRowData = new ArrayList<>();
+            PdfTools.addTableCell( informationRowData,
+                                   borderlessTableFonts,
+                                   align,
+                                   false,
+                                   element );
+            informationTableData.add( informationRowData );
+        }
 
-                // Draw "Page x of N" at the returned point, where "x" =
-                // pageNumber and "N" = numberOfPages.
-                final String pageCounter = "Page " + pageNumber + " of "
-                        + numberOfPages;
-                page.drawString(
-                        fonts._footerFont,
-                        pageCounter,
-                        points[ 0 ], //point.getX(),
-                        points[ 1 ] ); //point.getY() );
+        return informationTableData;
+    }
 
-                pageNumber++;
+    // Generic method to write a borderless single-column Information Table.
+    // NOTE: The return type changed in the new API; it used to be Point.
+    public static float[] writeInformationTable( final PDF document,
+                                                 final Page page,
+                                                 final Point initialPoint,
+                                                 final PdfFonts borderlessTableFonts,
+                                                 final List< List< Cell > > informationTableData ) {
+        // Get a table to use for the Information fields, sans headers.
+        final Table informationTable = new Table();
+
+        // Set the table to borderless, to match our on-screen look and feel.
+        //informationTable.setNoCellBorders(); // NOTE: Replaced in API?
+        informationTable.setCellBorders( false );
+
+        // Write the table to as many pages as are required to fit.
+        // NOTE: The return type changed in the new API; it used to be Point.
+        Point point = new Point( initialPoint.getX(), initialPoint.getY() );
+        return writeTable( document,
+                           page,
+                           point,
+                           borderlessTableFonts,
+                           informationTableData,
+                           informationTable,
+                //Table.DATA_HAS_0_HEADER_ROWS, // NOTE: Obsolete API version
+                           Table.WITH_0_HEADER_ROWS,
+                           true,
+                           false );
+    }
+
+    /*
+    // Generic method to export Project Properties to PDF.
+    public static void writeProjectProperties( final TextColumn column,
+                                               final PdfFonts fonts,
+                                               final String projectName,
+                                               final String venue,
+                                               final String designer,
+                                               final String date,
+                                               final boolean useProjectNotes,
+                                               final String projectNotes ) {
+        // Pad this report sub-section to better set it apart visually.
+        addEmptyLines( column, Align.CENTER, fonts._headerFont, 2 );
+
+        // Write the Project Name as the main header for the Project
+        // Properties section.
+        final StringBuilder projectHeader = new StringBuilder( "Project: " );
+         //$NON-NLS-1$
+        projectHeader.append( projectName );
+        addParagraph( column, Align.CENTER, fonts._propertiesHeaderFont,
+        projectHeader.toString() );
+
+        // Write the remaining Project Properties as a pseudo-table.
+        final StringBuilder venueItem = new StringBuilder( "Venue: " );
+        //$NON-NLS-1$
+        venueItem.append( venue );
+        addParagraph( column, Align.CENTER, fonts._propertiesFont, venueItem
+        .toString() );
+
+        final StringBuilder designerItem = new StringBuilder( "Designer: " );
+         //$NON-NLS-1$
+        designerItem.append( designer );
+        addParagraph( column, Align.CENTER, fonts._propertiesFont,
+        designerItem.toString() );
+
+        final StringBuilder dateItem = new StringBuilder( "Date: " );
+        //$NON-NLS-1$
+        dateItem.append( date );
+        addParagraph( column, Align.CENTER, fonts._propertiesFont, dateItem
+        .toString() );
+
+        // Conditionally write the multi-line Project Notes.
+        // TODO: Once up to Java 17, make use of Text Blocks?
+        if ( useProjectNotes ) {
+            final StringBuilder notesHeader = new StringBuilder( "Project
+            Notes: " ); //$NON-NLS-1$
+            addParagraph( column, Align.CENTER, fonts._notesHeaderFont,
+            notesHeader.toString() );
+
+            // Iterate over each line of the Project Notes.
+            final String notesItem = projectNotes;
+            final String lines[] = notesItem.split( "\\r?\\n" ); //$NON-NLS-1$
+            for ( final String line : lines ) {
+                addParagraph( column, Align.LEFT, fonts._notesFont, line );
             }
         }
-        catch ( final Exception e ) {
-            e.printStackTrace();
-            return null;
-        }
+
+        // Pad this report sub-section to better set it apart visually.
+        addEmptyLines( column, Align.CENTER, fonts._headerFont, 2 );
     }
+    */
 
     // Generic method to write multi-page table data to a PDF Report.
     // NOTE: The return type changed in new API; it used to be Point.
@@ -1151,6 +1124,56 @@ public final class PdfTools {
         return writeTable( document, page, fonts, table, landscapeMode );
     }
 
+    // Implementation method to write a multi-page table to a PDF Report.
+    // NOTE: Return type changed in new API; it used to be Point
+    public static float[] writeTable( final PDF document,
+                                      final Page firstPage,
+                                      final PdfFonts fonts,
+                                      final Table table,
+                                      final boolean landscapeMode ) {
+        try {
+            Page page = firstPage;
+
+            // NOTE: New API doesn't have this method, so limit to one page?
+            //final int numberOfPages = table.getNumberOfPages( page );
+            final int numberOfPages = 1;
+            int pageNumber = 1;
+
+            while ( true ) {
+                // Draw the table directly on the page as though it is a canvas.
+                //final Point point = table.drawOn( page ); // NOTE: obsolete
+                final float[] points = table.drawOn( page );
+
+                if ( !table.hasMoreData() ) { // NOTE: Forced method to public
+                    // Allow the table to be drawn again later.
+                    //table.resetRenderedPagesCount(); // NOTE: Removed from API
+                    //return point; // NOTE: Return type changed in new API
+                    return points;
+                }
+
+                final float[] pageSize = landscapeMode
+                                         ? LANDSCAPE_PAGE_SIZE
+                                         : PORTRAIT_PAGE_SIZE;
+                page = new Page( document, pageSize );
+
+                // Draw "Page x of N" at the returned point, where "x" =
+                // pageNumber and "N" = numberOfPages.
+                final String pageCounter = "Page " + pageNumber + " of "
+                                           + numberOfPages;
+                page.drawString( fonts._footerFont,
+                                 pageCounter,
+                                 points[ 0 ], //point.getX(),
+                                 points[ 1 ] ); //point.getY() );
+
+                pageNumber++;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public static double writeVisualization( final PDF document,
                                              final Page visualizationPage,
                                              final PdfFonts fonts,
@@ -1164,7 +1187,8 @@ public final class PdfTools {
                                              final BufferedImage chartLegend )
             throws Exception {
         // We seem to have to manually set our positioning on the page.
-        final Point point = new Point( PORTRAIT_LEFT_MARGIN, PORTRAIT_TOP_MARGIN );
+        final Point point = new Point( PORTRAIT_LEFT_MARGIN,
+                                       PORTRAIT_TOP_MARGIN );
 
         // Write the Chart Label, if it isn't included in the Chart layout.
         if ( chartLabel != null ) {
@@ -1185,8 +1209,8 @@ public final class PdfTools {
         // Scale and output the image sources to fit the PDF page destination.
         final double xOffset = PORTRAIT_LEFT_MARGIN;
         final double yOffset = PORTRAIT_TOP_MARGIN + ( ( chartLabel != null )
-                ? 30d
-                : 0.0d );
+                                                       ? 30d
+                                                       : 0.0d );
         double chart2AdjustmentY = 0.0d;
         double legendAdjustmentX = 0.0d;
         double metadataAdjustmentY = 0.0d;
@@ -1211,19 +1235,71 @@ public final class PdfTools {
                 chart2Image.drawOn( visualizationPage );
 
                 // Adjust positioning for the next layout elements.
-                legendAdjustmentX = FastMath.max( legendAdjustmentX, chart2Image.getWidth() );
+                legendAdjustmentX = FastMath.max( legendAdjustmentX,
+                                                  chart2Image.getWidth() );
                 metadataAdjustmentY += chart2Image.getHeight();
             }
         }
         if ( useLegend ) {
-            final Image chartLegendImage = getImageSnapshot( document, chartLegend );
+            final Image chartLegendImage = getImageSnapshot( document,
+                                                             chartLegend );
             if ( chartLegendImage != null ) {
-                chartLegendImage.setPosition( xOffset + legendAdjustmentX, yOffset );
+                chartLegendImage.setPosition( xOffset + legendAdjustmentX,
+                                              yOffset );
                 chartLegendImage.scaleBy( scaleFactor );
                 chartLegendImage.drawOn( visualizationPage );
             }
         }
 
         return metadataAdjustmentY;
+    }
+
+    @SuppressWarnings( "nls" )
+    public static Image getImageSnapshot( final PDF document,
+                                          final BufferedImage bufferedImage ) {
+        try ( final ByteArrayOutputStream byteArrayOutputStream =
+                      new ByteArrayOutputStream() ) {
+            final boolean succeeded = ImageIO.write( bufferedImage,
+                                                     "png",
+                                                     byteArrayOutputStream );
+            if ( !succeeded ) {
+                return null;
+            }
+
+            final byte[] imageByteArray = byteArrayOutputStream.toByteArray();
+            try ( final InputStream bais = new ByteArrayInputStream(
+                    imageByteArray ) ) {
+                return new Image( document, bais, ImageType.PNG );
+            }
+            catch ( final Exception e ) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // Generic method to write a section header for a PDF Report.
+    public static void writeSectionHeader( final Page page,
+                                           final Point point,
+                                           final PdfFonts fonts,
+                                           final String sectionTitle ) {
+        final TextLine titleLine = new TextLine( fonts._sectionHeaderFont,
+                                                 sectionTitle );
+
+        // Center the section header on the page.
+        final float x = 0.5f * ( page.getWidth() - titleLine.getWidth() );
+        final float y = point.getY();
+        titleLine.setPosition( x, y );
+
+        try {
+            titleLine.drawOn( page );
+        }
+        catch ( final Exception e ) {
+            e.printStackTrace();
+        }
     }
 }

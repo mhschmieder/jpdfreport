@@ -43,11 +43,10 @@ public class PdfException extends RuntimeException {
     /**
      * Fully qualified constructor for a library encapsulation of exceptions
      * related to PDF handling. Generally these will be recaptures of Core Java
-     * exceptions, wrapped in a library class to better mark the cause or fault.
+     * exceptions, wrapped in a library class to better mark the cause or
+     * fault.
      *
-     * @param message
-     *            The full pre-parsed string to include with the exception
-     *
+     * @param message The full pre-parsed string to include with the exception
      * @since 1.0
      */
     public PdfException( final String message ) {

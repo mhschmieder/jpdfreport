@@ -78,15 +78,23 @@ public final class PdfFonts {
             // Ensure a consistent table header font throughout the report.
             _tableHeaderFont = new Font( document, CoreFont.HELVETICA_BOLD );
             _tableHeaderFont.setSize( needMediumTableFonts
-                ? 6.5f
-                : needSmallTableFonts ? 5f : needBorderlessTableFonts ? 6f : 8f );
+                                      ? 6.5f
+                                      : needSmallTableFonts
+                                        ? 5f
+                                        : needBorderlessTableFonts
+                                          ? 6f
+                                          : 8f );
             _tableHeaderFont.setItalic( true );
 
             // Ensure a consistent table cell font throughout the report.
             _tableCellFont = new Font( document, CoreFont.HELVETICA );
             _tableCellFont.setSize( needMediumTableFonts
-                ? 6.5f
-                : needSmallTableFonts ? 5f : needBorderlessTableFonts ? 6f : 8f );
+                                    ? 6.5f
+                                    : needSmallTableFonts
+                                      ? 5f
+                                      : needBorderlessTableFonts
+                                        ? 6f
+                                        : 8f );
 
             // Ensure a consistent table label font throughout the report.
             _tableLabelFont = new Font( document, CoreFont.HELVETICA_BOLD );
@@ -101,7 +109,8 @@ public final class PdfFonts {
             _axisLabelFont.setSize( 6f );
 
             // Ensure a consistent properties header font throughout the report.
-            _propertiesHeaderFont = new Font( document, CoreFont.HELVETICA_BOLD );
+            _propertiesHeaderFont = new Font( document,
+                                              CoreFont.HELVETICA_BOLD );
             _propertiesHeaderFont.setSize( 13f );
 
             // Ensure a consistent properties font throughout the report.
