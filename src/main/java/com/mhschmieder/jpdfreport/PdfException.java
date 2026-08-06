@@ -35,6 +35,7 @@ package com.mhschmieder.jpdfreport;
  * of clearly identifying library calls as the underlying cause.
  */
 public class PdfException extends RuntimeException {
+
     /**
      *
      */
